@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Para o Amor da Minha Vida ❤️</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      width: 100%;
+      background: #111827;
+      border-radius: 30px;
+      padding: 40px 25px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.8rem;
+      color: #f9a8d4;
+      margin-bottom: 15px;
+    }
+
+    p {
+      font-size: 1.05rem;
+      color: #d1d5db;
+      margin-bottom: 18px;
+      line-height: 1.7;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 12px 28px;
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #f472b6, #ec4899);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 20px rgba(236,72,153,0.4);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(236,72,153,0.6);
+    }
+
+    .gallery {
+      margin-top: 25px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .gallery img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 18px;
+      transition: all 0.3s ease;
+      filter: brightness(0.9);
+    }
+
+    .gallery img:hover {
+      transform: scale(1.04);
+      filter: brightness(1.05);
+    }
+
+    footer {
+      margin-top: 25px;
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    /* MODAL SURPRESA */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.4s ease;
+    }
+
+    .overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: #1f2937;
+      padding: 25px;
+      border-radius: 20px;
+      max-width: 400px;
+      text-align: center;
+      animation: fadeIn 0.6s ease;
+    }
+
+    .modal img {
+      width: 100%;
+      border-radius: 15px;
+      margin-bottom: 15px;
+    }
+
+    .modal p {
+      font-size: 1.1rem;
+      color: #f9a8d4;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Você é Tudo Pra Mim ❤️</h1>
+
+    <p>
+      Desde que você entrou na minha vida, tudo ficou mais bonito, mais leve e mais verdadeiro.
+    </p>
+
+    <p>
+      Mesmo quando estamos longe, eu sinto você perto. Você é minha paz e a melhor parte dos meus dias.
+    </p>
+
+    <button onclick="abrirSurpresa()">Abrir surpresa 💌</button>
+
+    <div class="gallery">
+      <img src="foto1.jpg" alt="Nossa foto">
+      <img src="foto2.jpg" alt="Nossa foto">
+      <img src="foto3.jpg" alt="Nossa foto">
+      <img src="foto4.jpg" alt="Nossa foto">
+    </div>
+
+    <footer>
+      Feito com amor pelo seu namorado ❤️
+    </footer>
+  </div>
+
+  <!-- MODAL -->
+  <div class="overlay" id="overlay" onclick="fecharSurpresa()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <img src="foto5.png" alt="Nossa foto especial">
+      <p>
+        Eu poderia escrever mil coisas aqui… mas a verdade é simples: 
+        eu te amo de um jeito que não cabe em palavras. ❤️
+      </p>
+    </div>
+  </div>
+
+  <script>
+    function abrirSurpresa() {
+      document.getElementById('overlay').classList.add('active');
+    }
+
+    function fecharSurpresa() {
+      document.getElementById('overlay').classList.remove('active');
+    }
+  </script>
+
+</body>
+</html>
