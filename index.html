@@ -672,12 +672,17 @@
     function fecharFoto(){ document.getElementById('foto-overlay').classList.remove('active'); }
 
     /* ── GitHub Storage for Memories ── */
-    // Para que os uploads funcionem automaticamente, adicione um GitHub Personal Access Token
-    // (Fine-grained PAT com permissão Contents: Read & Write neste repositório) como segredo
-    // chamado UPLOAD_TOKEN nas configurações do repositório (Settings → Secrets → Actions).
-    // O workflow de deploy injeta o token aqui em tempo de build, sem expô-lo no código-fonte.
-    // Para testes locais, preencha o valor abaixo ou use o gesto de long-press no rodapé (2 s):
+    // Para que os uploads funcionem, configure os segredos no repositório conforme o README.
+    // O workflow de deploy injeta os valores aqui em tempo de build.
+    // Para testes locais, preencha os valores abaixo ou use o gesto de long-press no rodapé (2 s):
     const GH_TOKEN = '';   // ex: 'github_pat_XXXXXXXX'
+
+    /* ── Cloudinary (armazenamento de imagens) ── */
+    // Imagens são enviadas ao Cloudinary usando um upload preset não autenticado (unsigned).
+    // Crie uma conta gratuita em cloudinary.com, crie um unsigned upload preset e configure
+    // os segredos CLOUDINARY_CLOUD_NAME e CLOUDINARY_PRESET no repositório (Settings → Secrets → Actions).
+    const CLOUDINARY_CLOUD_NAME = '';  // ex: 'meu-cloud'
+    const CLOUDINARY_PRESET = '';      // ex: 'vivi_unsigned'
 
     const MSG_TOKEN_MISSING =
       '⚠️ Esta funcionalidade ainda não está configurada.\n\n' +
@@ -688,8 +693,7 @@
       owner: 'KallebySchultz',
       repo: 'vivi',
       branch: 'main',
-      regFile: 'registros.json',
-      imgDir: 'registros/imgs'
+      regFile: 'registros.json'
     };
 
     function getGHToken(){ return GH_TOKEN || localStorage.getItem('gh_pat') || ''; }
@@ -736,27 +740,20 @@
       return res.json();
     }
 
-    async function ghPutImage(path, base64Data){
-      const tok = getGHToken();
-      if(!tok) throw new Error('Token não informado');
+    async function cloudinaryUpload(dataUrl){
+      const cloud  = CLOUDINARY_CLOUD_NAME;
+      const preset = CLOUDINARY_PRESET;
+      if(!cloud || !preset) throw new Error('Cloudinary não configurado (CLOUDINARY_CLOUD_NAME / CLOUDINARY_PRESET)');
+      const form = new FormData();
+      form.append('file', dataUrl);
+      form.append('upload_preset', preset);
       const res = await fetch(
-        `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}`,
-        {
-          method: 'PUT',
-          headers: {
-            Authorization: 'Bearer ' + tok,
-            Accept: 'application/vnd.github+json',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            message: 'Registros: adicionar imagem',
-            content: base64Data,
-            branch: GH.branch
-          })
-        }
+        `https://api.cloudinary.com/v1_1/${cloud}/image/upload`,
+        { method: 'POST', body: form }
       );
       if(!res.ok) throw new Error('Erro ao enviar imagem (' + res.status + ')');
-      return res.json();
+      const data = await res.json();
+      return data.secure_url;
     }
 
     async function loadMemories(){
@@ -862,10 +859,7 @@
         let imgUrl = '';
         if(prev.classList.contains('visible')){
           const compressed = await compressImage(prev.src);
-          const base64 = compressed.split(',')[1];
-          const imgPath = `${GH.imgDir}/${Date.now()}_${Math.random().toString(36).slice(2,7)}.jpg`;
-          await ghPutImage(imgPath, base64);
-          imgUrl = `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${imgPath}`;
+          imgUrl = await cloudinaryUpload(compressed);
         }
 
         const mems = await loadMemories();

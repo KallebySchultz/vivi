@@ -23,29 +23,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Inject upload token into HTML
+      - name: Inject credentials into HTML
         env:
           UPLOAD_TOKEN: ${{ secrets.UPLOAD_TOKEN }}
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_PRESET: ${{ secrets.CLOUDINARY_PRESET }}
         run: |
           python3 - <<'EOF'
           import os
-          token = os.environ.get('UPLOAD_TOKEN', '')
+          token       = os.environ.get('UPLOAD_TOKEN', '')
+          cloud_name  = os.environ.get('CLOUDINARY_CLOUD_NAME', '')
+          preset      = os.environ.get('CLOUDINARY_PRESET', '')
+
+          with open('index.html', 'r', encoding='utf-8') as f:
+              content = f.read()
+
           if not token:
-              print('::warning::UPLOAD_TOKEN secret não configurado. O upload de imagens pelo site não funcionará até que o secret seja adicionado.')
+              print('::warning::UPLOAD_TOKEN secret não configurado. O salvamento de memórias não funcionará.')
               print('::warning::Para ativar: Settings → Secrets and variables → Actions → New secret → UPLOAD_TOKEN')
           else:
-              # Escape any single quotes in the token to prevent breaking the JS string literal.
+              # Escape single quotes to avoid breaking the JS string literal.
               safe_token = token.replace("'", "\\'")
-              with open('index.html', 'r', encoding='utf-8') as f:
-                  content = f.read()
-              content = content.replace(
-                  "const GH_TOKEN = '';",
-                  "const GH_TOKEN = '" + safe_token + "';",
-                  1
-              )
-              with open('index.html', 'w', encoding='utf-8') as f:
-                  f.write(content)
+              content = content.replace("const GH_TOKEN = '';", "const GH_TOKEN = '" + safe_token + "';", 1)
               print('UPLOAD_TOKEN injetado com sucesso.')
+
+          if not cloud_name or not preset:
+              print('::warning::CLOUDINARY_CLOUD_NAME e/ou CLOUDINARY_PRESET não configurados. O upload de imagens não funcionará.')
+              print('::warning::Consulte o README para configurar o Cloudinary.')
+          else:
+              # Escape single quotes to avoid breaking the JS string literals.
+              safe_cloud  = cloud_name.replace("'", "\\'")
+              safe_preset = preset.replace("'", "\\'")
+              content = content.replace("const CLOUDINARY_CLOUD_NAME = '';", "const CLOUDINARY_CLOUD_NAME = '" + safe_cloud + "';", 1)
+              content = content.replace("const CLOUDINARY_PRESET = '';",      "const CLOUDINARY_PRESET = '"      + safe_preset + "';", 1)
+              print('Cloudinary injetado com sucesso.')
+
+          with open('index.html', 'w', encoding='utf-8') as f:
+              f.write(content)
           EOF
 
       - name: Setup Pages
