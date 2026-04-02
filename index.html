@@ -679,6 +679,11 @@
     // Para testes locais, preencha o valor abaixo ou use o gesto de long-press no rodapé (2 s):
     const GH_TOKEN = '';   // ex: 'github_pat_XXXXXXXX'
 
+    const MSG_TOKEN_MISSING =
+      '⚠️ Esta funcionalidade ainda não está configurada.\n\n' +
+      'Para ativar o salvamento de memórias, o repositório precisa de um token de acesso (UPLOAD_TOKEN).\n\n' +
+      'Se você é o criador do site, pressione e segure o rodapé por 2 segundos para configurar.';
+
     const GH = {
       owner: 'KallebySchultz',
       repo: 'vivi',
@@ -845,8 +850,8 @@
       if(!title){ alert('Por favor, adicione um título!'); return; }
 
       if(!getGHToken()){
-        await openTokenModal();
-        if(!getGHToken()) return;
+        alert(MSG_TOKEN_MISSING);
+        return;
       }
 
       const btn = document.querySelector('.btn-save');
