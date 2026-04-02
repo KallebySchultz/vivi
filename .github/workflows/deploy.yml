@@ -1,0 +1,59 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Inject upload token into HTML
+        env:
+          UPLOAD_TOKEN: ${{ secrets.UPLOAD_TOKEN }}
+        run: |
+          python3 - <<'EOF'
+          import os, sys
+          token = os.environ.get('UPLOAD_TOKEN', '')
+          if not token:
+              print('::warning::UPLOAD_TOKEN secret is not set — image uploads will require manual token entry.')
+              sys.exit(0)
+          # Escape any single quotes in the token to prevent breaking the JS string literal.
+          safe_token = token.replace("'", "\\'")
+          with open('index.html', 'r', encoding='utf-8') as f:
+              content = f.read()
+          content = content.replace(
+              "const GH_TOKEN = '';",
+              "const GH_TOKEN = '" + safe_token + "';",
+              1
+          )
+          with open('index.html', 'w', encoding='utf-8') as f:
+              f.write(content)
+          EOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

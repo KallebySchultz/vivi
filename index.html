@@ -672,9 +672,11 @@
     function fecharFoto(){ document.getElementById('foto-overlay').classList.remove('active'); }
 
     /* ── GitHub Storage for Memories ── */
-    // Para permitir que qualquer pessoa envie registros sem digitar nada,
-    // substitua o valor abaixo pelo seu GitHub Personal Access Token
-    // (Fine-grained PAT com permissão de escrita neste repositório):
+    // Para que os uploads funcionem automaticamente, adicione um GitHub Personal Access Token
+    // (Fine-grained PAT com permissão Contents: Read & Write neste repositório) como segredo
+    // chamado UPLOAD_TOKEN nas configurações do repositório (Settings → Secrets → Actions).
+    // O workflow de deploy injeta o token aqui em tempo de build, sem expô-lo no código-fonte.
+    // Para testes locais, preencha o valor abaixo ou use o gesto de long-press no rodapé (2 s):
     const GH_TOKEN = '';   // ex: 'github_pat_XXXXXXXX'
 
     const GH = {
