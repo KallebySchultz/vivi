@@ -176,7 +176,7 @@
       display: block;
       border-radius: 16px;
     }
-    .lyrics-block {
+    .music-upload-block {
       margin-top: 22px;
       background: linear-gradient(135deg, rgba(244,114,182,0.07), rgba(236,72,153,0.04));
       border: 1px solid rgba(244,114,182,0.18);
@@ -184,14 +184,27 @@
       padding: 22px 26px;
       text-align: center;
     }
-    .lyrics-block p {
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
-      font-size: clamp(0.95rem, 2.4vw, 1.1rem);
-      color: #f9a8d4;
-      line-height: 2;
-      white-space: pre-line;
+    .music-upload-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border: 2px dashed rgba(244,114,182,0.35);
+      border-radius: 14px;
+      padding: 16px 28px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--card2);
+      color: var(--muted);
+      font-size: 0.9rem;
     }
+    .music-upload-label:hover { border-color: var(--pink); background: rgba(244,114,182,0.06); }
+    .music-upload-label span { font-size: 1.6rem; }
+    #music-player {
+      display: none;
+      margin-top: 16px;
+      width: 100%;
+    }
+    #music-player.visible { display: block; }
 
     /* ── Gallery ── */
     .gallery-section { margin-bottom: 36px; }
@@ -508,13 +521,12 @@
           loading="lazy">
         </iframe>
       </div>
-      <div class="lyrics-block">
-        <p>Sei que um dia eu vou morrer
-Saiba que isso também vale pra você
-Mas enquanto esse dia não vem
-Quero passar todos os outros ao seu lado
-Meu bem, você precisa entender
-Que a minha vida só se torna tolerável com você...</p>
+      <div class="music-upload-block">
+        <label class="music-upload-label" for="music-file">
+          <span>🎶</span> Enviar música
+        </label>
+        <input type="file" id="music-file" accept="audio/*" onchange="previewMusic(this)">
+        <audio id="music-player" controls></audio>
       </div>
     </section>
 
@@ -809,6 +821,15 @@ Que a minha vida só se torna tolerável com você...</p>
         prev.classList.add('visible');
       };
       reader.readAsDataURL(file);
+    }
+
+    function previewMusic(input){
+      const file = input.files[0];
+      if(!file) return;
+      const player = document.getElementById('music-player');
+      player.src = URL.createObjectURL(file);
+      player.classList.add('visible');
+      player.play();
     }
 
     async function salvarMemoria(){
