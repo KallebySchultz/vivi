@@ -31,8 +31,15 @@ jobs:
           import os, sys
           token = os.environ.get('UPLOAD_TOKEN', '')
           if not token:
-              print('::warning::UPLOAD_TOKEN secret is not set — image uploads will require manual token entry.')
-              sys.exit(0)
+              print('::error::UPLOAD_TOKEN secret não configurado!')
+              print('::error::Para que qualquer pessoa possa adicionar memórias pelo site, você precisa:')
+              print('::error::1. Crie um Fine-grained Personal Access Token em https://github.com/settings/tokens')
+              print('::error::   - Repository access: somente este repositório')
+              print('::error::   - Permissão Contents: Read and write')
+              print('::error::2. Vá em Settings → Secrets and variables → Actions deste repositório')
+              print('::error::3. Crie um novo secret chamado UPLOAD_TOKEN com o valor do token criado')
+              print('::error::4. Execute novamente este workflow (push ou Actions → Run workflow)')
+              sys.exit(1)
           # Escape any single quotes in the token to prevent breaking the JS string literal.
           safe_token = token.replace("'", "\\'")
           with open('index.html', 'r', encoding='utf-8') as f:
