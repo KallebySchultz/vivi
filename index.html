@@ -438,6 +438,7 @@
       color: #4b5563;
     }
     footer span { color: var(--pink); }
+    .mem-loading { color: var(--muted); text-align: center; padding: 16px; }
   </style>
 </head>
 <body>
@@ -634,6 +635,8 @@
 
     function getGHToken(){ return localStorage.getItem('gh_pat') || ''; }
 
+    const JPEG_QUALITY = 0.82;
+
     async function ghGetFile(path){
       const headers = { Accept: 'application/vnd.github+json' };
       const tok = getGHToken();
@@ -723,7 +726,7 @@
           const c = document.createElement('canvas');
           c.width = w; c.height = h;
           c.getContext('2d').drawImage(img, 0, 0, w, h);
-          resolve(c.toDataURL('image/jpeg', 0.82));
+          resolve(c.toDataURL('image/jpeg', JPEG_QUALITY));
         };
         img.src = dataUrl;
       });
@@ -731,7 +734,7 @@
 
     async function renderMemories(){
       const grid = document.getElementById('memories-grid');
-      grid.innerHTML = '<p style="color:var(--muted);text-align:center;padding:16px">Carregando...</p>';
+      grid.innerHTML = '<p class="mem-loading">Carregando...</p>';
       const mems = await loadMemories();
       if(!mems.length){ grid.innerHTML = ''; return; }
       grid.innerHTML = mems.map((m,i)=>`
@@ -803,7 +806,7 @@
         if(prev.classList.contains('visible')){
           const compressed = await compressImage(prev.src);
           const base64 = compressed.split(',')[1];
-          const imgPath = `${GH.imgDir}/${Date.now()}.jpg`;
+          const imgPath = `${GH.imgDir}/${Date.now()}_${Math.random().toString(36).slice(2,7)}.jpg`;
           await ghPutImage(imgPath, base64);
           imgUrl = `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${imgPath}`;
         }
