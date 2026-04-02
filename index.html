@@ -176,22 +176,6 @@
       display: block;
       border-radius: 16px;
     }
-    .lyrics-block {
-      margin-top: 22px;
-      background: linear-gradient(135deg, rgba(244,114,182,0.07), rgba(236,72,153,0.04));
-      border: 1px solid rgba(244,114,182,0.18);
-      border-radius: 18px;
-      padding: 22px 26px;
-      text-align: center;
-    }
-    .lyrics-block p {
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
-      font-size: clamp(0.95rem, 2.4vw, 1.1rem);
-      color: #f9a8d4;
-      line-height: 2;
-      white-space: pre-line;
-    }
 
     /* ── Gallery ── */
     .gallery-section { margin-bottom: 36px; }
@@ -508,14 +492,6 @@
           loading="lazy">
         </iframe>
       </div>
-      <div class="lyrics-block">
-        <p>Sei que um dia eu vou morrer
-Saiba que isso também vale pra você
-Mas enquanto esse dia não vem
-Quero passar todos os outros ao seu lado
-Meu bem, você precisa entender
-Que a minha vida só se torna tolerável com você...</p>
-      </div>
     </section>
 
     <!-- ── GALLERY ── -->
@@ -573,7 +549,7 @@ Que a minha vida só se torna tolerável com você...</p>
       </div>
     </section>
 
-    <footer>Feito com <span>❤️</span> pelo seu namorado</footer>
+    <footer id="footer">Feito com <span>❤️</span> pelo seu namorado</footer>
   </div>
 
   <!-- MODAL SURPRESA -->
@@ -819,7 +795,11 @@ Que a minha vida só se torna tolerável com você...</p>
 
       if(!title){ alert('Por favor, adicione um título!'); return; }
 
-      if(!getGHToken()){ alert('Esta funcionalidade ainda não está configurada. Entre em contato com o administrador do site.'); return; }
+      if(!getGHToken()){
+        const tok = prompt('Para salvar, insira o token de acesso do repositório:','');
+        if(!tok){ return; }
+        localStorage.setItem('gh_pat', tok.trim());
+      }
 
       const btn = document.querySelector('.btn-save');
       btn.disabled = true;
@@ -856,6 +836,28 @@ Que a minha vida só se torna tolerável com você...</p>
     }
 
     renderMemories();
+
+    /* ── Hidden token setup: long-press footer (2 s) ── */
+    (function(){
+      const footer = document.getElementById('footer');
+      let timer;
+      function start(){ timer = setTimeout(configToken, 2000); }
+      function cancel(){ clearTimeout(timer); }
+      footer.addEventListener('mousedown', start);
+      footer.addEventListener('touchstart', start, {passive:true});
+      footer.addEventListener('mouseup',   cancel);
+      footer.addEventListener('mouseleave',cancel);
+      footer.addEventListener('touchend',  cancel);
+      footer.addEventListener('touchcancel', cancel);
+    })();
+
+    function configToken(){
+      const cur = localStorage.getItem('gh_pat') || '';
+      const tok = prompt('Token de acesso GitHub (deixe vazio para remover):', cur);
+      if(tok === null) return;
+      if(tok.trim()){ localStorage.setItem('gh_pat', tok.trim()); alert('Token salvo! ✔'); }
+      else { localStorage.removeItem('gh_pat'); alert('Token removido.'); }
+    }
   </script>
 
 </body>
