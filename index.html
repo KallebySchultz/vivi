@@ -439,6 +439,39 @@
     }
     footer span { color: var(--pink); }
     .mem-loading { color: var(--muted); text-align: center; padding: 16px; }
+
+    /* ── Token modal ── */
+    .tok-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200; padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .tok-overlay.active { opacity: 1; pointer-events: all; }
+    .tok-box {
+      background: #1a1f2e; border: 1px solid rgba(244,114,182,0.25);
+      border-radius: 20px; padding: 28px 24px; max-width: 380px; width: 100%;
+      animation: popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .tok-box h3 { color: var(--pink); font-family: 'Playfair Display',serif; margin-bottom: 14px; font-size: 1.1rem; }
+    .tok-box p { color: var(--muted); font-size: 0.82rem; margin-bottom: 16px; line-height: 1.5; }
+    .tok-input {
+      width: 100%; background: var(--card2); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; padding: 10px 12px; color: var(--text);
+      font-family: 'Poppins', sans-serif; font-size: 0.9rem; outline: none;
+      transition: border-color 0.2s; margin-bottom: 14px;
+    }
+    .tok-input:focus { border-color: var(--pink); }
+    .tok-actions { display: flex; gap: 10px; }
+    .tok-btn {
+      flex: 1; padding: 10px; border: none; border-radius: 10px; cursor: pointer;
+      font-family: 'Poppins',sans-serif; font-size: 0.88rem; font-weight: 600; transition: opacity 0.2s;
+    }
+    .tok-btn:hover { opacity: 0.82; }
+    .tok-btn-save { background: linear-gradient(135deg, var(--pink), var(--pink-deep)); color: #fff; }
+    .tok-btn-cancel { background: rgba(244,114,182,0.1); color: var(--pink); }
+    .tok-btn-clear { background: rgba(255,100,100,0.12); color: #f87171; }
   </style>
 </head>
 <body>
@@ -550,6 +583,20 @@
     </section>
 
     <footer id="footer">Feito com <span>❤️</span> pelo seu namorado</footer>
+  </div>
+
+  <!-- TOKEN MODAL -->
+  <div class="tok-overlay" id="tok-overlay">
+    <div class="tok-box">
+      <h3>🔑 Token de Acesso</h3>
+      <p>Insira o Personal Access Token do GitHub com permissão de escrita neste repositório. Ele será salvo apenas neste navegador.</p>
+      <input class="tok-input" type="password" id="tok-input" placeholder="github_pat_..." autocomplete="off">
+      <div class="tok-actions">
+        <button class="tok-btn tok-btn-cancel" id="tok-cancel">Cancelar</button>
+        <button class="tok-btn tok-btn-clear"  id="tok-clear">Remover</button>
+        <button class="tok-btn tok-btn-save"   id="tok-save">Salvar ✔</button>
+      </div>
+    </div>
   </div>
 
   <!-- MODAL SURPRESA -->
@@ -796,9 +843,8 @@
       if(!title){ alert('Por favor, adicione um título!'); return; }
 
       if(!getGHToken()){
-        const tok = prompt('Para salvar, insira o token de acesso do repositório:','');
-        if(!tok){ return; }
-        localStorage.setItem('gh_pat', tok.trim());
+        await openTokenModal();
+        if(!getGHToken()) return;
       }
 
       const btn = document.querySelector('.btn-save');
@@ -837,6 +883,30 @@
 
     renderMemories();
 
+    /* ── Token modal ── */
+    (function(){
+      const overlay = document.getElementById('tok-overlay');
+      const input   = document.getElementById('tok-input');
+      let _resolve;
+
+      function open(){ overlay.classList.add('active'); input.value = ''; input.focus(); }
+      function close(){ overlay.classList.remove('active'); input.value = ''; }
+
+      document.getElementById('tok-cancel').addEventListener('click', ()=>{ close(); if(_resolve){ _resolve(false); _resolve=null; } });
+      document.getElementById('tok-clear').addEventListener('click', ()=>{ localStorage.removeItem('gh_pat'); close(); if(_resolve){ _resolve(false); _resolve=null; } });
+      document.getElementById('tok-save').addEventListener('click', ()=>{
+        const v = input.value.trim();
+        if(!v) return;
+        localStorage.setItem('gh_pat', v);
+        close();
+        if(_resolve){ _resolve(true); _resolve=null; }
+      });
+      overlay.addEventListener('click', e=>{ if(e.target===overlay){ close(); if(_resolve){ _resolve(false); _resolve=null; } } });
+
+      window.openTokenModal = ()=> new Promise(res=>{ _resolve=res; open(); });
+      window.configToken    = ()=> window.openTokenModal();
+    })();
+
     /* ── Hidden token setup: long-press footer (2 s) ── */
     (function(){
       const footer = document.getElementById('footer');
@@ -850,14 +920,6 @@
       footer.addEventListener('touchend',  cancel);
       footer.addEventListener('touchcancel', cancel);
     })();
-
-    function configToken(){
-      const cur = localStorage.getItem('gh_pat') || '';
-      const tok = prompt('Token de acesso GitHub (deixe vazio para remover):', cur);
-      if(tok === null) return;
-      if(tok.trim()){ localStorage.setItem('gh_pat', tok.trim()); alert('Token salvo! ✔'); }
-      else { localStorage.removeItem('gh_pat'); alert('Token removido.'); }
-    }
   </script>
 
 </body>
