@@ -201,7 +201,7 @@
     .gallery-item img {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain;
       display: block;
       transition: transform 0.35s ease, filter 0.35s ease;
       filter: brightness(0.88);
@@ -240,7 +240,7 @@
     .memory-card img {
       width: 100%;
       aspect-ratio: 4/3;
-      object-fit: cover;
+      object-fit: contain;
       display: block;
     }
     .memory-card-body { padding: 14px; }
@@ -353,7 +353,7 @@
       display: none;
       width: 100%;
       max-height: 220px;
-      object-fit: cover;
+      object-fit: contain;
       border-radius: 12px;
       margin-top: 12px;
     }
@@ -438,6 +438,7 @@
       color: #4b5563;
     }
     footer span { color: var(--pink); }
+    .mem-loading { color: var(--muted); text-align: center; padding: 16px; }
   </style>
 </head>
 <body>
@@ -478,13 +479,13 @@
 
     <!-- ── SPOTIFY ── -->
     <section class="spotify-section">
-      <h2 class="section-title">🎵 Nossa Playlist</h2>
-      <p class="spotify-desc">Músicas que me fazem pensar em você ❤️</p>
+      <h2 class="section-title">🎵 Nossa Música</h2>
+      <p class="spotify-desc">Serenata Existencialista — nossa música ❤️</p>
       <div class="spotify-embed">
         <iframe
-          src="https://open.spotify.com/embed/playlist/37i9dQZF1DX6z20IXmBjWI?utm_source=generator&theme=0"
+          src="https://open.spotify.com/embed/track/2DllnWTQNjh5NDN1A2ZtnH?utm_source=generator&theme=0"
           width="100%"
-          height="380"
+          height="152"
           frameborder="0"
           allowfullscreen=""
           allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
@@ -623,19 +624,122 @@
     }
     function fecharFoto(){ document.getElementById('foto-overlay').classList.remove('active'); }
 
-    /* ── Memories ── */
-    const STORAGE_KEY = 'vivi_memories';
+    /* ── GitHub Storage for Memories ── */
+    const GH = {
+      owner: 'KallebySchultz',
+      repo: 'vivi',
+      branch: 'main',
+      regFile: 'registros.json',
+      imgDir: 'registros/imgs'
+    };
 
-    function loadMemories(){ return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); }
-    function saveMemories(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+    function getGHToken(){ return localStorage.getItem('gh_pat') || ''; }
 
-    function renderMemories(){
+    const JPEG_QUALITY = 0.82;
+
+    async function ghGetFile(path){
+      const headers = { Accept: 'application/vnd.github+json' };
+      const tok = getGHToken();
+      if(tok) headers.Authorization = 'Bearer ' + tok;
+      const res = await fetch(
+        `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}?ref=${GH.branch}`,
+        { headers }
+      );
+      if(!res.ok) return null;
+      return res.json();
+    }
+
+    async function ghPutFile(path, contentStr, sha){
+      const tok = getGHToken();
+      if(!tok) throw new Error('Token não informado');
+      const bytes = new TextEncoder().encode(contentStr);
+      let binary = '';
+      for(const b of bytes) binary += String.fromCharCode(b);
+      const body = {
+        message: 'Registros: atualizar ' + path,
+        content: btoa(binary),
+        branch: GH.branch
+      };
+      if(sha) body.sha = sha;
+      const res = await fetch(
+        `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: 'Bearer ' + tok,
+            Accept: 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        }
+      );
+      if(!res.ok) throw new Error('Erro ao salvar no GitHub (' + res.status + ')');
+      return res.json();
+    }
+
+    async function ghPutImage(path, base64Data){
+      const tok = getGHToken();
+      if(!tok) throw new Error('Token não informado');
+      const res = await fetch(
+        `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: 'Bearer ' + tok,
+            Accept: 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: 'Registros: adicionar imagem',
+            content: base64Data,
+            branch: GH.branch
+          })
+        }
+      );
+      if(!res.ok) throw new Error('Erro ao enviar imagem (' + res.status + ')');
+      return res.json();
+    }
+
+    async function loadMemories(){
+      try{
+        const file = await ghGetFile(GH.regFile);
+        if(!file) return [];
+        const binary = atob(file.content.replace(/\n/g,''));
+        const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+        return JSON.parse(new TextDecoder().decode(bytes));
+      } catch(e){ return []; }
+    }
+
+    async function saveMemories(arr){
+      const file = await ghGetFile(GH.regFile);
+      const sha = file ? file.sha : null;
+      await ghPutFile(GH.regFile, JSON.stringify(arr, null, 2), sha);
+    }
+
+    function compressImage(dataUrl){
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX = 1200;
+          let w = img.width, h = img.height;
+          if(w > MAX){ h = Math.round(h * MAX / w); w = MAX; }
+          const c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(c.toDataURL('image/jpeg', JPEG_QUALITY));
+        };
+        img.src = dataUrl;
+      });
+    }
+
+    async function renderMemories(){
       const grid = document.getElementById('memories-grid');
-      const mems = loadMemories();
+      grid.innerHTML = '<p class="mem-loading">Carregando...</p>';
+      const mems = await loadMemories();
       if(!mems.length){ grid.innerHTML = ''; return; }
       grid.innerHTML = mems.map((m,i)=>`
         <div class="memory-card">
-          ${m.img ? `<img src="${m.img}" alt="${m.title}">` : ''}
+          ${m.img ? `<img src="${m.img}" alt="${escHtml(m.title)}">` : ''}
           <div class="memory-card-body">
             <div class="memory-card-date">${m.date ? formatDate(m.date) : ''}</div>
             <div class="memory-card-title">${escHtml(m.title)}</div>
@@ -655,10 +759,10 @@
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    function deleteMem(i){
-      const mems = loadMemories();
+    async function deleteMem(i){
+      const mems = await loadMemories();
       mems.splice(i,1);
-      saveMemories(mems);
+      await saveMemories(mems);
       renderMemories();
     }
 
@@ -678,27 +782,53 @@
       reader.readAsDataURL(file);
     }
 
-    function salvarMemoria(){
+    async function salvarMemoria(){
       const title = document.getElementById('mem-title').value.trim();
       const date  = document.getElementById('mem-date').value;
       const text  = document.getElementById('mem-text').value.trim();
       const prev  = document.getElementById('img-preview');
-      const img   = prev.classList.contains('visible') ? prev.src : '';
 
       if(!title){ alert('Por favor, adicione um título!'); return; }
 
-      const mems = loadMemories();
-      mems.unshift({ title, date, text, img });
-      saveMemories(mems);
-      renderMemories();
+      let tok = getGHToken();
+      if(!tok){
+        tok = prompt('Para salvar no GitHub, informe seu Personal Access Token (será guardado só no seu navegador):');
+        if(!tok){ alert('Token não informado. O registro não foi salvo.'); return; }
+        localStorage.setItem('gh_pat', tok.trim());
+      }
 
-      document.getElementById('mem-title').value = '';
-      document.getElementById('mem-date').value  = '';
-      document.getElementById('mem-text').value  = '';
-      prev.src = '';
-      prev.classList.remove('visible');
-      document.getElementById('mem-img').value = '';
-      document.getElementById('memory-form-wrap').classList.remove('open');
+      const btn = document.querySelector('.btn-save');
+      btn.disabled = true;
+      btn.textContent = 'Salvando... ⏳';
+
+      try{
+        let imgUrl = '';
+        if(prev.classList.contains('visible')){
+          const compressed = await compressImage(prev.src);
+          const base64 = compressed.split(',')[1];
+          const imgPath = `${GH.imgDir}/${Date.now()}_${Math.random().toString(36).slice(2,7)}.jpg`;
+          await ghPutImage(imgPath, base64);
+          imgUrl = `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${imgPath}`;
+        }
+
+        const mems = await loadMemories();
+        mems.unshift({ title, date, text, img: imgUrl });
+        await saveMemories(mems);
+        renderMemories();
+
+        document.getElementById('mem-title').value = '';
+        document.getElementById('mem-date').value  = '';
+        document.getElementById('mem-text').value  = '';
+        prev.src = '';
+        prev.classList.remove('visible');
+        document.getElementById('mem-img').value = '';
+        document.getElementById('memory-form-wrap').classList.remove('open');
+      } catch(e){
+        alert('Erro ao salvar: ' + e.message);
+      } finally{
+        btn.disabled = false;
+        btn.textContent = 'Salvar memória 💾';
+      }
     }
 
     renderMemories();
