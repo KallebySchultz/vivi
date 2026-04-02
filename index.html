@@ -176,6 +176,22 @@
       display: block;
       border-radius: 16px;
     }
+    .lyrics-block {
+      margin-top: 22px;
+      background: linear-gradient(135deg, rgba(244,114,182,0.07), rgba(236,72,153,0.04));
+      border: 1px solid rgba(244,114,182,0.18);
+      border-radius: 18px;
+      padding: 22px 26px;
+      text-align: center;
+    }
+    .lyrics-block p {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: clamp(0.95rem, 2.4vw, 1.1rem);
+      color: #f9a8d4;
+      line-height: 2;
+      white-space: pre-line;
+    }
 
     /* ── Gallery ── */
     .gallery-section { margin-bottom: 36px; }
@@ -492,6 +508,14 @@
           loading="lazy">
         </iframe>
       </div>
+      <div class="lyrics-block">
+        <p>Sei que um dia eu vou morrer
+Saiba que isso também vale pra você
+Mas enquanto esse dia não vem
+Quero passar todos os outros ao seu lado
+Meu bem, você precisa entender
+Que a minha vida só se torna tolerável com você...</p>
+      </div>
     </section>
 
     <!-- ── GALLERY ── -->
@@ -625,6 +649,11 @@
     function fecharFoto(){ document.getElementById('foto-overlay').classList.remove('active'); }
 
     /* ── GitHub Storage for Memories ── */
+    // Para permitir que qualquer pessoa envie registros sem digitar nada,
+    // substitua o valor abaixo pelo seu GitHub Personal Access Token
+    // (Fine-grained PAT com permissão de escrita neste repositório):
+    const GH_TOKEN = '';   // ex: 'github_pat_XXXXXXXX'
+
     const GH = {
       owner: 'KallebySchultz',
       repo: 'vivi',
@@ -633,7 +662,7 @@
       imgDir: 'registros/imgs'
     };
 
-    function getGHToken(){ return localStorage.getItem('gh_pat') || ''; }
+    function getGHToken(){ return GH_TOKEN || localStorage.getItem('gh_pat') || ''; }
 
     const JPEG_QUALITY = 0.82;
 
@@ -790,12 +819,7 @@
 
       if(!title){ alert('Por favor, adicione um título!'); return; }
 
-      let tok = getGHToken();
-      if(!tok){
-        tok = prompt('Para salvar no GitHub, informe seu Personal Access Token (será guardado só no seu navegador):');
-        if(!tok){ alert('Token não informado. O registro não foi salvo.'); return; }
-        localStorage.setItem('gh_pat', tok.trim());
-      }
+      if(!getGHToken()){ alert('Esta funcionalidade ainda não está configurada. Entre em contato com o administrador do site.'); return; }
 
       const btn = document.querySelector('.btn-save');
       btn.disabled = true;
