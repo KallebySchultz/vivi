@@ -700,8 +700,8 @@
       const tok = getGHToken();
       if(tok) headers.Authorization = 'Bearer ' + tok;
       const res = await fetch(
-        `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}?ref=${GH.branch}`,
-        { headers }
+        `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}?ref=${GH.branch}&_=${Date.now()}`,
+        { headers, cache: 'no-cache' }
       );
       if(!res.ok) return null;
       return res.json();
@@ -803,7 +803,7 @@
       if(!mems.length){ grid.innerHTML = ''; return; }
       grid.innerHTML = mems.map((m,i)=>`
         <div class="memory-card">
-          ${m.img ? `<img src="${m.img}" alt="${escHtml(m.title)}">` : ''}
+          ${m.img ? `<img src="${m.img}?_=${Date.now()}" alt="${escHtml(m.title)}">` : ''}
           <div class="memory-card-body">
             <div class="memory-card-date">${m.date ? formatDate(m.date) : ''}</div>
             <div class="memory-card-title">${escHtml(m.title)}</div>
