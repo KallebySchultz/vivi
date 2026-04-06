@@ -1,12 +1,11 @@
-# 💕 Vivi — Um Cantinho do Nosso Amor
+# 💕 Um Cantinho do Nosso Amor
 
 > *"O amor não se explica, ele se sente. E aqui, a gente sente cada detalhe."* 🌹
 
 ---
 
-## O que é isso? 🥺
-
-**Vivi** é um site feito com muito amor, carinho e uns tantinhos de código — criado especialmente para celebrar e eternizar os momentos mais lindos de um casal. 💑
+## O que é isso? 
+é um site feito com muito amor, carinho e uns tantinhos de código — criado especialmente para celebrar e eternizar os momentos mais lindos de um casal. 💑
 
 É um espaço só nosso, onde as memórias não se perdem: fotos, sorrisos, aventuras e qualquer recordação especial ficam guardados aqui para sempre, como um diário digital do nosso amor. 📖✨
 
