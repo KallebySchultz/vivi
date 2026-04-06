@@ -76,7 +76,7 @@ Pronto! Agora qualquer memória adicionada ficará salva e visível para sempre.
 
 <div align="center">
 
-Feito com ❤️ e muito amor — para durar para sempre.
+Feito com muito amor para durar para sempre.
 
 *"Eu te amo hoje, amanhã e sempre."* 🌙
 
